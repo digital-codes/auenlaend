@@ -91,9 +91,11 @@ The AUENLÄND chatbot uses pattern matching to recognize common phrases and ques
 
 ```
 auenlaend/
+├── .gitignore           # Git ignore patterns for Python
 ├── chatbot.py           # Main chatbot application
-├── requirements.txt     # Python dependencies (currently empty)
-└── README.md           # This file
+├── requirements.txt     # Python dependencies
+├── test_chatbot.py      # Unit tests for the chatbot
+└── README.md            # This file
 ```
 
 ### Extending the Chatbot
