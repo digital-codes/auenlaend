@@ -106,7 +106,7 @@ onMounted(() => {
   }
 
   // make a check if backend is running at /api/ with a get resquest. should return 200 and {status: "ok"}
-  fetch('/api/').then(response => {
+  fetch('/api').then(response => {
     if (!response.ok) {
       console.error("APP: Backend API is not reachable:", response.statusText);
     } else {
