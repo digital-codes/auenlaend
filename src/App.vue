@@ -15,7 +15,9 @@ const showSidebar = ref(false)
 const page = ref(1)
 
 import ChatBot from './components/ChatBot.vue'
-import IntroPage from './components/IntroPage.vue' 
+import IntroPage from './components/IntroPage.vue'
+
+import { postToBackend, getFromBackend, handleBackendResponse } from './services/backendComms'
 
 // ----------------------------
 // load sidebar icons
@@ -80,7 +82,7 @@ const goto = (p: number) => {
   showSidebar.value = false
 }
 
-onMounted(() => {
+onMounted(async () => {
   // language
   const savedLang = safeGet('language')
   const browserLang = navigator?.language?.split('-')?.[0]
@@ -105,7 +107,9 @@ onMounted(() => {
     }
   }
 
-  // make a check if backend is running at /api/ with a get resquest. should return 200 and {status: "ok"}
+
+  // make a check if backend is running at /api/ with a get request. should return 200 and {status: "ok"}
+  /*
   fetch('/api').then(response => {
     if (!response.ok) {
       console.error("APP: Backend API is not reachable:", response.statusText);
@@ -124,7 +128,54 @@ onMounted(() => {
   }).catch(error => {
     console.error("APP: Error while trying to reach Backend API:", error);
   });
+  */
 
+  const backendComms = await getFromBackend()
+  if (!backendComms || !backendComms.data) {
+    console.error("APP: No response from Backend API");
+    try {
+      localStorage.setItem('backendReady', 'false')
+      console.log('APP: localStorage backendReady set to false')
+    } catch (e) {
+      console.error('APP: Failed to set localStorage backendReady', e)
+    }
+    return
+  } else {
+    console.log("APP: Received response from Backend API:", backendComms)
+    const backendCheck = handleBackendResponse(backendComms)
+    console.log("APP: Backend check response:", backendCheck)
+    if (backendCheck.data.status === "ok") {
+      console.log("APP: Backend API status:", backendCheck.data.status);
+      try {
+        localStorage.setItem('backendReady', 'true')
+        console.log('APP: localStorage backendReady set to true')
+      } catch (e) {
+        console.error('APP: Failed to set localStorage backendReady', e)
+      }
+      // try a dummy post
+      const dummyPost = { input: "wie macht man co2 messung", session: "", repeat: true, context: { "lang": "de", "type": "123", "history": "bla bla" } }
+      for (const repeat of [false, true]) {
+        dummyPost.repeat = repeat
+        console.log(`APP: Sending dummy post to backend with repeat=${repeat}:`, dummyPost)
+        const backendPost = await postToBackend(dummyPost, repeat)
+        const backendPostCheck = handleBackendResponse(backendPost)
+        console.log("APP: Backend dummy post response:", backendPostCheck)
+        if (backendPostCheck.data.status) {
+          console.log(`APP: Backend API dummy post completed with repeat=${repeat}`);
+        } else {
+          console.log(`APP: Backend API dummy post delayed with repeat=${repeat}`);
+        }
+      }
+    } else {
+      console.error("APP: Backend API returned unexpected status:", backendCheck.data.status);
+      try {
+        localStorage.setItem('backendReady', 'false')
+        console.log('APP: localStorage backendReady set to false')
+      } catch (e) {
+        console.error('APP: Failed to set localStorage backendReady', e)
+      }
+    }
+  }
 })
 
 
@@ -132,7 +183,7 @@ onMounted(() => {
 type MsgType = { text: string; type: string };
 
 const msg = (message: MsgType) => {
-    console.log("APP: Received message from ChatBot:", message);
+  console.log("APP: Received message from ChatBot:", message);
 };
 
 
@@ -148,9 +199,10 @@ const msg = (message: MsgType) => {
         </template>
 
         <template #center>
-          <VaNavbarItem ><span class="headline left">{{ $t("rheinauen") }}</span></VaNavbarItem>
+          <VaNavbarItem><span class="headline left">{{ $t("rheinauen") }}</span></VaNavbarItem>
           <VaNavbarItem role="link" aria-label="Click for Home">
-            <VaImage :src="logo" :title='t("logo")' fit="cover" class="logoimg" @click="page = 1" style="cursor: pointer">
+            <VaImage :src="logo" :title='t("logo")' fit="cover" class="logoimg" @click="page = 1"
+              style="cursor: pointer">
             </VaImage>
           </VaNavbarItem>
           <VaNavbarItem v-if="breakpoints.smUp"><span class="headline right">{{ $t("chatbot") }}</span></VaNavbarItem>
@@ -194,10 +246,10 @@ const msg = (message: MsgType) => {
 
     <template #content>
       <main v-if="page === 1" class="p-4 main-info">
-        <IntroPage @start="page = 2"/>
+        <IntroPage @start="page = 2" />
       </main>
       <main v-else-if="page === 2" class="p-4 main-chat">
-        <ChatBot @message="msg"/>
+        <ChatBot @message="msg" />
       </main>
     </template>
   </VaLayout>
@@ -241,5 +293,4 @@ main {
   max-width: 6rem;
   margin-right: 8px;
 }
-
 </style>
