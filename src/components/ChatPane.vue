@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, nextTick } from 'vue';
+import { onMounted, ref, nextTick } from 'vue';
 import BotResponse from './BotResponse.vue';
 
 import { postToBackend, handleBackendResponse } from '../services/backendComms'
 
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
+
+import { useModal } from 'vuestic-ui'
+import type { AxiosResponse } from 'axios';
+const { confirm } = useModal()
 
 const loading = ref<boolean>(false);
 
@@ -17,7 +21,8 @@ type Message = {
     link?: string | null;
     src?: string | null;
     audioSrc?: string | null;
-    options?: string[] | null;
+    options?: { title: string; label: string; }[] | null;
+    backendData?: any;
 };
 
 const chatMessages = ref<Message[]>([]);
@@ -26,6 +31,7 @@ const chatInput = ref<string>("");
 const historyPane = ref<HTMLElement | null>(null);
 
 let autoBot = true;
+let repeat = false;
 
 const emit = defineEmits<{
     (e: 'message', message: { text: string; type: string }): void;
@@ -80,7 +86,7 @@ const formatAutobotMessage = (text: string): Message => {
     }
     if (text && text.toLowerCase().startsWith("options")) {
         const items = text.split(" ");
-        const options = items.slice(1);
+        const options = items.slice(1).map(item => ({title: item.trim(), label: item.trim()}));
         console.log("Parsed options:", options);
         botMsg.text = "Please choose an option:";
         botMsg.options = options;
@@ -89,12 +95,12 @@ const formatAutobotMessage = (text: string): Message => {
     return botMsg;
 };
 
-const formatBotMessage = async (message: any): Promise<void> => {
+const formatBotMessage =  (message: any): Message => {
     const botMsg: Message = {} as Message;
     if (!message.context) {
         console.log("No context in bot message, not appending.");
         loading.value = false;
-        return;
+        return botMsg;
     }
     if (message.context.output) {
         if (message.context.output.text)
@@ -115,13 +121,11 @@ const formatBotMessage = async (message: any): Promise<void> => {
     }
     if (message.context.options && Array.isArray(message.context.options)) {
         console.log("Bot message has options:", message.context.options);
-        botMsg.options = message.context.options.map((opt: any) => opt.label);
+        botMsg.options = message.context.options;
     }
 
     botMsg.type = "bot";
-    chatMessages.value.push(botMsg);
-    await scrollHistoryToBottom();
-    loading.value = false;
+    return botMsg
 
 };
 
@@ -149,26 +153,70 @@ const appendChatMessage = async (message: { text: string; type: string }) => {
         }, 1000);
     } else {
         console.log("Autobot processing disabled.");
-        const postMsg = { input: message.text, session: "", context: { "lang": "de", "type": "123", "history": "bla bla" } }
-        const backendPost = await postToBackend(postMsg,true)
-        const backendPostCheck = handleBackendResponse(backendPost)
-        console.log("APP: Backend dummy post response:", backendPostCheck)
-        if (backendPostCheck.data.status) {
-            console.log(`APP: Backend API dummy post completed`);
+        let postMsg: any
+        // find last user input
+        let lastUserInput = ""
+        const userInputs = chatMessages.value.filter(msg => msg.type === "user");
+        if (userInputs.length > 1) {
+            const last = userInputs[userInputs.length - 2];
+            if (last && typeof last.text === 'string') {
+                lastUserInput = last.text;
+            }
+        }
+        console.log("Found previous user inputs:", lastUserInput);
+        // need to copy backendData from previous bot message if exists
+        const botResponses = chatMessages.value.filter(msg => msg.type === "bot" && msg.backendData);
+        console.log("Found previous bot responses with backend data:", botResponses.length, botResponses);
+        if (botResponses.length > 0) {
+            const lastMsg = botResponses[botResponses.length - 1];
+            const lastIntent = lastMsg?.backendData?.context.intent || "";
+            postMsg = { ...lastMsg?.backendData}
+            postMsg.input = message.text
+            if (postMsg.context) delete postMsg.context.output;
+            postMsg.context.last_intent = lastIntent
+            postMsg.context.last_input = lastUserInput;
+            postMsg.context.lang = locale.value;
+            // some advanced context handling could go here
+            if (postMsg.context.intent && (!postMsg.context.options || postMsg.context.options.length == 0)) {
+                delete postMsg.context.intent;
+            }
+
         } else {
-            console.log(`APP: Backend API dummy post delayed`);
+            postMsg = { input: message.text, session: "", context: {lang: locale.value } };
+        }
+
+        let backendPostCheck: AxiosResponse<any>;
+        while (true) {
+            const backendPost = await postToBackend(postMsg,repeat)
+            backendPostCheck = handleBackendResponse(backendPost)
+            console.log("APP: Backend dummy post response:", backendPostCheck)
+            if (backendPostCheck.status == 200) {
+                console.log(`APP: Backend API dummy post completed`);
+                break
+            } else {
+                console.log(`APP: Backend API dummy post delayed`);
+                confirm({message: t('delayInfo'),cancelText:t('delayCancel'),title:t('delayTitle')}).then((ok) => ok).catch(() => { console.log('User cancelled the delayed response confirmation')});
+                repeat = true;
+            }
         }
         console.log("Recevied:", backendPostCheck.data);
-        formatBotMessage(backendPostCheck.data);
+        const botMsg: Message = formatBotMessage(backendPostCheck.data);
+        botMsg.backendData = backendPostCheck.data;
+        console.log("Appending bot message from backend:", botMsg);
+        chatMessages.value.push(botMsg);
+        await scrollHistoryToBottom();
+        loading.value = false;
 
     }
 
     emit('message', message);
 };
 
+/*
 watch(chatInput, (newInput) => {
     console.log("Chat input changed to:", newInput);
 });
+*/
 
 const botOption = (opt: string) => {
     console.log("Bot option selected:", opt);

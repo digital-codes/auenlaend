@@ -13,9 +13,14 @@
         "rheinauen": "Rhine Meadows",
         "input": "Enter your message",
         "openNew": "Open in new tab",
+        "delayInfo": "The response may take a few seconds...",
+        "delayCancel": "Cancel",
+        "delayTitle": "Delay",
         "vuestic": {
             "select": "Select",
-            "noOptions": "No options available"
+            "noOptions": "No options available",
+            "ok": "OK",
+            "cancel": "Cancel"
         },
         "intro": {
             "text": "KarlA2, the virtual Auen ranger",
@@ -48,9 +53,14 @@
         "input": "Geben Sie Ihre Nachricht ein",
         "openNew": "In neuem Tab öffnen",
         "rheinauen": "Rheinauen",
+        "delayInfo": "Die Antwort kann einige Sekunden dauern...",
+        "delayCancel": "Abbrechen",
+        "delayTitle": "Verzögerung",
         "vuestic": {
             "select": "Auswahl",
-            "noOptions": "Keine Optionen verfügbar"
+            "noOptions": "Keine Optionen verfügbar",
+            "ok": "OK",
+            "cancel": "Abbrechen"
         },
         "intro": {
             "text": "KarlA2, die virtuelle Auen‑Rangerin",
@@ -83,9 +93,14 @@
         "input": "Entrez votre message",
         "openNew": "Ouvrir dans un nouvel onglet",
         "rheinauen": "Prairies du Rhin",
+        "delayInfo": "La réponse peut prendre quelques secondes...",
+        "delayCancel": "Annuler",
+        "delayTitle": "Délai",
         "vuestic": {
             "select": "Sélectionner",
-            "noOptions": "Aucune option disponible"
+            "noOptions": "Aucune option disponible",
+            "ok": "OK",
+            "cancel": "Annuler"
         },
         "intro": {
             "text": "KarlA2, le garde‑ranger virtuel des Auen",

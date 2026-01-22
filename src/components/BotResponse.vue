@@ -11,7 +11,7 @@ const props = defineProps<{
   src?: string | null;
   audioSrc?: string | null;
   link?: string | null;
-  options?: string[] | null;
+  options?: { label: string; title: string }[] | null;
   idx: number;
   last: boolean;
 }>();
@@ -38,19 +38,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <!--
-    <div class="bot-pane">
-    <p v-if="text">{{ text }}</p>
-    <va-img v-if="src" :src="src"  />
-    <div v-if="options && options.length > 0" class="options-pane mt-4">
-    <va-button v-for="(option, idx) in options" :key="idx" class="m-2" color="primary"
-        @click="emit('optionSelected', option)">
-        {{ option }}
-    </va-button>
-    </div>
-    </div>
--->
-  <va-chip @click="idxClicked">{{ idx }}</va-chip>
+
+<va-chip @click="idxClicked">{{ idx }}</va-chip>
   <div class="bot-pane">
     <VaCard>
       <VaCardTitle class="bot-hdr">
@@ -125,8 +114,8 @@ onMounted(() => {
         <VaCardContent>
           <div class="options-pane mt-4">
             <va-button v-for="(option, idx) in options" :key="idx" class="m-2 mr-2" color="primary"
-              @click="emit('optionSelected', option)" :disabled="!last">
-              {{ option }}
+              @click="emit('optionSelected', option.title)" :disabled="!last">
+              {{ option.label }}
             </va-button>
           </div>
         </VaCardContent>
