@@ -49,31 +49,34 @@ const scrollHistoryToBottom = async () => {
 
 
 const formatAutobotMessage = (text: string): Message => {
-    const botMsg: Message = { text: "This is an automated response.", type: "bot" };
-    if ("image" === text.toLowerCase()) {
+    const botMsg: Message = { text: "", type: "bot"};
+    if (text.toLowerCase().includes('image')) {
         //emit("showImage", "/img/auen_ref.jpg","Fantasy");
-        botMsg.text = "Here is an image of Auenländ.";
+        botMsg.text += "Here is an image of Auenländ.";
         botMsg.src = "/img/auen_ref.jpg";
     }
-    if ("wiki" === text.toLowerCase()) {
+    if (text.toLowerCase().includes('wiki')) {
         //emit("showImage", "https:\/\/upload.wikimedia.org\/wikipedia\/commons\/thumb\/c\/c6\/Abeille_charpentiere_1024.jpg\/330px-Abeille_charpentiere_1024.jpg","Wiki Bee");
         botMsg.text = "Wiki Bee.";
         botMsg.src = "https:\/\/upload.wikimedia.org\/wikipedia\/commons\/thumb\/c\/c6\/Abeille_charpentiere_1024.jpg\/330px-Abeille_charpentiere_1024.jpg";
     }
-    if ("audio" === text.toLowerCase()) {
+    if (text.toLowerCase().includes('audio')) {
         // emit("playAudio", "https:\/\/www.deutsche-digitale-bibliothek.de\/item\/4S5THRPVERDH2DCDJR3WKXJBAPW4EXEP?isThumbnailFiltered=true&query=Tonaufnahme+Eisvogel&rows=20&offset=0&viewType=list&hitNumber=2");
         //emit("playAudio", "https://api.deutsche-digitale-bibliothek.de/binary/aaedf5bc-6ac4-4112-aa42-f4556c5f8ce2.mpeg","Eisvogel Tonaufnahme");
-        botMsg.text = "Eisvogel Tonaufnahme";
+        botMsg.text += "Eisvogel Tonaufnahme";
         botMsg.audioSrc = "https://api.deutsche-digitale-bibliothek.de/binary/aaedf5bc-6ac4-4112-aa42-f4556c5f8ce2.mpeg";
     }
-    if ("frame" === text.toLowerCase()) {
+    if (text.toLowerCase().includes('frame')) {
         emit("showFrame", 'https://www.youtube.com/embed/QGbPBJxLg6I', "Rheinauen mit Hund");
     }
-    if ("link" === text.toLowerCase()) {
-        botMsg.text = "Nazka Anreise"
+    if (text.toLowerCase().includes('link')) {
+        botMsg.text += "Nazka Anreise"
         botMsg.link = "https://nazka.de/anreise";
         //chatMessages.value.push(botMsg);
         //autoBot = false;
+    }
+    if (botMsg.text === "") {
+        botMsg.text = "Autobot response to: " + text;
     }
     if (text && text.toLowerCase().startsWith("options")) {
         const items = text.split(" ");
@@ -146,8 +149,8 @@ const appendChatMessage = async (message: { text: string; type: string }) => {
         }, 1000);
     } else {
         console.log("Autobot processing disabled.");
-        const postMsg = { input: message.text, session: "", repeat: true, context: { "lang": "de", "type": "123", "history": "bla bla" } }
-        const backendPost = await postToBackend(postMsg)
+        const postMsg = { input: message.text, session: "", context: { "lang": "de", "type": "123", "history": "bla bla" } }
+        const backendPost = await postToBackend(postMsg,true)
         const backendPostCheck = handleBackendResponse(backendPost)
         console.log("APP: Backend dummy post response:", backendPostCheck)
         if (backendPostCheck.data.status) {

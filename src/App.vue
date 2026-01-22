@@ -265,6 +265,19 @@ const msg = (message: MsgType) => {
   top: 4rem;
 }
 
+/* Desktop: 700px and up — info left of chat, full height, info width 40% */
+@media (max-width: 479px) {
+
+.va-navbar {
+  --va-navbar-padding-x: .5rem;
+}
+
+.va-navbar__item {
+  --va-navbar-item-margin: .25rem;
+}
+}
+
+
 .logoimg {
   height: 3rem;
   width: 3rem;
