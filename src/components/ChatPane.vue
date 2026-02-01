@@ -7,9 +7,7 @@ import { postToBackend, handleBackendResponse } from '../services/backendComms'
 import { useI18n } from 'vue-i18n';
 const { t, locale } = useI18n();
 
-import { useModal } from 'vuestic-ui'
 import type { AxiosResponse } from 'axios';
-const { confirm } = useModal()
 
 const loading = ref<boolean>(false);
 
@@ -21,7 +19,7 @@ type Message = {
     link?: string | null;
     src?: string | null;
     audioSrc?: string | null;
-    options?: { title: string; label: string; }[] | null;
+    options?: { title: string; text: string; }[] | null;
     backendData?: any;
 };
 
@@ -85,7 +83,7 @@ const formatAutobotMessage = (text: string): Message => {
     }
     if (text && text.toLowerCase().startsWith("options")) {
         const items = text.split(" ");
-        const options = items.slice(1).map(item => ({title: item.trim(), label: item.trim()}));
+        const options = items.slice(1).map(item => ({title: item.trim(), text: item.trim()}));
         console.log("Parsed options:", options);
         botMsg.text = "Please choose an option:";
         botMsg.options = options;

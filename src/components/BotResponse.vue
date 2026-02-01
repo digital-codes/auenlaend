@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const zoomed = ref(false);
 
