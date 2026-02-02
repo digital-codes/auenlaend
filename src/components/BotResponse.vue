@@ -110,7 +110,10 @@ onMounted(() => {
           © Frommolt, Karl-Heinz , Tierstimmenarchiv - Museum für Naturkunde Berlin CC-BY-SA-NC 4.0
         </VaCardTitle>
         <VaCardContent class="audio">
+        <!-- 
           <audio :src="audioSrc" controls autoplay class="bot-audio" />
+          -->
+          <audio :src="audioSrc" controls class="bot-audio" />
         </VaCardContent>
       </VaCard>
       <VaCard v-if="options && options.length > 0">

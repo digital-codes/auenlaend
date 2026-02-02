@@ -18,7 +18,8 @@
         "delayTitle": "Verzögerung",
         "bot":{
             "options":"Auswahlmöglichkeiten",
-            "response":"Antwort"
+            "response":"Antwort",
+            "onlyImage":"Es gibt leider nur das Bild, ohne Beschreibung"
         },
         "vuestic": {
             "select": "Auswahl",
@@ -62,7 +63,8 @@
         "delayTitle": "Delay",
         "bot":{
             "options":"Options",
-            "response":"Response"
+            "response":"Response",
+            "onlyImage":"Unfortunately, there is only the image, without description"
         },
         "vuestic": {
             "select": "Select",
@@ -106,7 +108,8 @@
         "delayTitle": "Délai",
         "bot":{
             "options":"Options",
-            "response":"Réponse"
+            "response":"Réponse",
+            "onlyImage":"Malheureusement, il n'y a que l'image, sans description"
         },
         "vuestic": {
             "select": "Sélectionner",
