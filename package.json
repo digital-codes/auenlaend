@@ -11,7 +11,7 @@
   "dependencies": {
     "@fontsource/roboto-condensed": "^5.2.8",
     "@types/axios": "^0.9.36",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "material-icons": "^1.13.14",
     "openmoji": "^16.0.0",
     "pinia": "^3.0.4",
