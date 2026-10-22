@@ -94,8 +94,8 @@ const formatAutobotMessage = (text: string): Message => {
 
 const formatBotMessage =  (message: any): Message => {
     const botMsg: Message = {} as Message;
-    if (!message.context) {
-        console.log("No context in bot message, not appending.");
+    if (!message.state) {
+        console.log("No state token in bot message, not appending.");
         loading.value = false;
         return botMsg;
     }
@@ -121,13 +121,9 @@ const formatBotMessage =  (message: any): Message => {
         botMsg.link = message.message.link.url
         //botMsg.src = message.message.link.url
     }
-    if (message.context.options) {
-        console.log("Bot message has options:", message.context.options);
-        botMsg.options = message.context.options
-    }
-    if (message.context.options && Array.isArray(message.context.options)) {
-        console.log("Bot message has options:", message.context.options);
-        botMsg.options = message.context.options;
+    if (message.options) {
+        console.log("Bot message has options:", message.options);
+        botMsg.options = message.options;
     }
 
     botMsg.type = "bot";
@@ -160,35 +156,20 @@ const appendChatMessage = async (message: { text: string; type: string }) => {
     } else {
         console.log("Autobot processing disabled.");
         let postMsg: any
-        // find last user input
-        let lastUserInput = ""
-        const userInputs = chatMessages.value.filter(msg => msg.type === "user");
-        if (userInputs.length > 1) {
-            const last = userInputs[userInputs.length - 2];
-            if (last && typeof last.text === 'string') {
-                lastUserInput = last.text;
-            }
-        }
-        console.log("Found previous user inputs:", lastUserInput);
         // need to copy backendData from previous bot message if exists
         const botResponses = chatMessages.value.filter(msg => msg.type === "bot" && msg.backendData);
         console.log("Found previous bot responses with backend data:", botResponses.length, botResponses);
         if (botResponses.length > 0) {
             const lastMsg = botResponses[botResponses.length - 1];
-            const lastIntent = lastMsg?.backendData?.context.intent || "";
+            // echo the opaque state token and session from the previous
+            // response; conversation state lives server-side inside the token
             postMsg = { ...lastMsg?.backendData}
+            delete postMsg.context;
             postMsg.message = {"text": message.text}
-            postMsg.context.last_intent = lastIntent
-            postMsg.context.last_input = lastUserInput;
             postMsg.lang = locale.value;
             postMsg.sequence += 1;
-            // some advanced context handling could go here
-            if (postMsg.context.intent && (!postMsg.context.options || postMsg.context.options.length == 0)) {
-                delete postMsg.context.intent;
-            }
-
         } else {
-            postMsg = { message:{"text": message.text}, session: "", sequence:1, lang: locale.value, context: {} };
+            postMsg = { message:{"text": message.text}, session: "", sequence:1, lang: locale.value };
         }
 
         let backendPostCheck: AxiosResponse<any>;
@@ -202,11 +183,27 @@ const appendChatMessage = async (message: { text: string; type: string }) => {
         }
 
         console.log("Recevied:", backendPostCheck.data);
+        if (!backendPostCheck.data) {
+            // backend error (e.g. sanitization 400 or network failure):
+            // show an error bubble, reset loading, keep the chat usable
+            console.error("APP: Backend returned no data, appending error bubble");
+            const errMsg: Message = {
+                text: "Ich konnte deine Nachricht leider nicht verarbeiten. Bitte versuche es erneut.",
+                type: "error",
+            };
+            chatMessages.value.push(errMsg);
+            await scrollHistoryToBottom();
+            loading.value = false;
+            emit('message', message);
+            return;
+        }
         const botMsg: Message = formatBotMessage(backendPostCheck.data);
         botMsg.backendData = backendPostCheck.data;
         console.log("Appending bot message from backend:", botMsg);
-        chatMessages.value.push(botMsg);
-        await scrollHistoryToBottom();
+        if (botMsg.text || botMsg.src || botMsg.audioSrc || botMsg.link || botMsg.options) {
+            chatMessages.value.push(botMsg);
+            await scrollHistoryToBottom();
+        }
         loading.value = false;
 
     }

@@ -153,7 +153,7 @@ onMounted(async () => {
         console.error('APP: Failed to set localStorage backendReady', e)
       }
       // try a dummy post
-      const dummyPost = { message:{"text": "hallo auenbot"}, session: "", sequence:0, context: {}, lang: "de" }
+      const dummyPost = { message:{"text": "hallo auenbot"}, session: "", sequence:0, lang: "de" }
       console.log(`APP: Sending dummy post to backend:`, dummyPost)
       const backendPost = await postToBackend(dummyPost)
       const backendPostCheck = handleBackendResponse(backendPost)
